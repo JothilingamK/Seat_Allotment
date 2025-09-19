@@ -1,7 +1,6 @@
 package com.SeatAllotment.SeatAllotment.Model;
 
 import com.SeatAllotment.SeatAllotment.Enum.SeatStatus;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity

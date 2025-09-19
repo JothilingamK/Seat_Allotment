@@ -1,6 +1,5 @@
 package com.SeatAllotment.SeatAllotment.Model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity

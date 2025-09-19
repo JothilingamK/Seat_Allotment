@@ -11,16 +11,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-import static com.SeatAllotment.SeatAllotment.Enum.SeatStatus.VACANT;
-
 @Service
 public class SeatService {
 
     @Autowired
     private SeatRepository seatRepository;
-
-    @Autowired
-    private EmployeeService employeeService;
 
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -33,7 +28,7 @@ public class SeatService {
         return seatRepository.findById(id);
     }
 
-    public Optional<Employee>   getEmployeeBySeat(String seatId) {
+    public Optional<Employee> getEmployeeBySeat(String seatId) {
         Optional<Seat> seatOptional = seatRepository.findById(seatId);
 
         if (seatOptional.isPresent()) {
@@ -46,7 +41,6 @@ public class SeatService {
         return Optional.empty();
     }
 
-
     public void resetSeatByEmployeeId(Long employeeId) {
         Optional<Seat> seat = seatRepository.findByEmployeeId(employeeId);
         if (seat.isPresent()) {
@@ -58,7 +52,7 @@ public class SeatService {
     }
 
     public List<Seat> getVacantSeats() {
-        return seatRepository.findByStatus(SeatStatus.VACANT);  // ✅ Fetch all vacant seats
+        return seatRepository.findByStatus(SeatStatus.VACANT); // ✅ Fetch all vacant seats
     }
 
 }

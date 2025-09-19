@@ -5,12 +5,12 @@ import com.SeatAllotment.SeatAllotment.Model.Seat;
 import com.SeatAllotment.SeatAllotment.Model.Employee;
 import com.SeatAllotment.SeatAllotment.service.SeatService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -38,23 +38,23 @@ public class SeatController {
                 Employee employee = employeeOptional.get();
 
                 // Seat is OCCUPIED — return employee details
-                return ResponseEntity.ok().body(new Object() {
-                    public final String seatId = seat.getId();
-                    public final String status = seat.getStatus().toString();
-                    public final String employeeName = employee.getName();
-                    public final String role = employee.getRole();
-                    public final String department = employee.getDepartment();
-                });
+                Map<String, Object> response = new HashMap<>();
+                response.put("seatId", seat.getId());
+                response.put("status", seat.getStatus().toString());
+                response.put("employeeName", employee.getName());
+                response.put("role", employee.getRole());
+                response.put("department", employee.getDepartment());
+                return ResponseEntity.ok().body(response);
             }
 
             // Seat is not OCCUPIED — return actual status and message
-            return ResponseEntity.ok().body(new Object() {
-                public final String seatId = seat.getId();
-                public final String status = seat.getStatus().toString(); // Use real status
-                public final String message = seat.getStatus() == SeatStatus.RESERVED
-                        ? "Seat is reserved"
-                        : "Seat is vacant";
-            });
+            Map<String, Object> response = new HashMap<>();
+            response.put("seatId", seat.getId());
+            response.put("status", seat.getStatus().toString());
+            response.put("message", seat.getStatus() == SeatStatus.RESERVED
+                    ? "Seat is reserved"
+                    : "Seat is vacant");
+            return ResponseEntity.ok().body(response);
         }
 
         // Seat not found
