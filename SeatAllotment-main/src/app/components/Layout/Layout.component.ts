@@ -87,7 +87,6 @@ export class LayoutComponent implements OnInit {
         }
   
         if (response.status === 'VACANT') {
-          alert(`${response.message}`); // e.g., "Seat is vacant"
           console.log('Vacant:', response.message);
           this.selectedEmployee = null;
           this.showPopup = false;
@@ -95,7 +94,6 @@ export class LayoutComponent implements OnInit {
         }
   
         if (response.status === 'RESERVED') {
-          alert(`${response.message}`); // e.g., "Seat is reserved"
           console.log('Reserved:', response.message);
           this.selectedEmployee = null;
           this.showPopup = false;

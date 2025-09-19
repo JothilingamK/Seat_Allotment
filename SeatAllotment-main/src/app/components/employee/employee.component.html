@@ -76,6 +76,9 @@
                     <button class="action-btn primary" (click)="showModal = true">
                         <i class="bi bi-person-plus"></i> Add Employee
                     </button>
+                    <button class="action-btn bulk-upload" (click)="showBulkUploadModal = true">
+                        <i class="bi bi-cloud-upload"></i> Bulk Upload
+                    </button>
                     <button class="action-btn secondary" (click)="generateReport()">
                         <i class="bi bi-file-earmark-pdf"></i> Generate PDF
                     </button>
@@ -266,6 +269,150 @@
             Employee Added Successfully!
         </div>
 
+        <!-- Bulk Upload Modal -->
+        <div class="modal" *ngIf="showBulkUploadModal">
+            <div class="modal-content bulk-upload-modal">
+                <h2>Bulk Upload Employees</h2>
+                
+                <div class="upload-section">
+                    <div class="file-drop-zone" 
+                         (dragover)="onDragOver($event)" 
+                         (dragleave)="onDragLeave($event)" 
+                         (drop)="onFileDrop($event)"
+                         [class.drag-over]="isDragOver">
+                        <div class="drop-zone-content">
+                            <i class="bi bi-cloud-upload upload-icon"></i>
+                            <p class="upload-text">Drag & drop your Excel file here</p>
+                            <p class="upload-subtext">or</p>
+                            <input type="file" 
+                                   #fileInput 
+                                   (change)="onFileSelect($event)" 
+                                   accept=".xlsx,.xls" 
+                                   class="file-input">
+                            <button class="browse-btn" (click)="fileInput.click()">
+                                Browse Files
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div *ngIf="selectedFile" class="selected-file">
+                        <div class="file-info">
+                            <i class="bi bi-file-earmark-excel file-icon"></i>
+                            <div class="file-details">
+                                <p class="file-name">{{ selectedFile.name }}</p>
+                                <p class="file-size">{{ formatFileSize(selectedFile.size) }}</p>
+                            </div>
+                            <button class="remove-file-btn" (click)="removeSelectedFile()">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-instructions">
+                    <div class="instructions-header">
+                        <h4>Instructions:</h4>
+                        <button class="template-btn" (click)="downloadTemplate()">
+                            <i class="bi bi-download"></i> Download Template
+                        </button>
+                    </div>
+                    <ul>
+                        <li>Excel file should contain columns: Employee ID, Name, Department, Role, Seat No</li>
+                        <li>First row should be headers</li>
+                        <li>Supported formats: .xlsx, .xls</li>
+                        <li>Maximum file size: 10MB</li>
+                    </ul>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="submit-btn" 
+                            (click)="processBulkUpload()" 
+                            [disabled]="!selectedFile || isUploading">
+                        <i class="bi bi-upload" *ngIf="!isUploading"></i>
+                        <i class="bi bi-hourglass-split" *ngIf="isUploading"></i>
+                        {{ isUploading ? 'Processing...' : 'Upload & Process' }}
+                    </button>
+                    <button class="close-btn" (click)="closeBulkUploadModal()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal" *ngIf="showDeleteModal">
+            <div class="modal-content delete-confirmation-modal">
+                <div class="delete-header">
+                    <div class="delete-icon">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <h2>Confirm Employee Deletion</h2>
+                </div>
+                
+                <div class="delete-content">
+                    <p class="delete-warning">Are you sure you want to delete this employee? This action cannot be undone.</p>
+                    
+                    <div class="employee-details" *ngIf="employeeToDelete">
+                        <div class="detail-row">
+                            <span class="label">Employee ID:</span>
+                            <span class="value">{{ employeeToDelete.employeeid }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Name:</span>
+                            <span class="value">{{ employeeToDelete.name }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Department:</span>
+                            <span class="value">{{ employeeToDelete.department }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Role:</span>
+                            <span class="value">{{ employeeToDelete.role || 'Not specified' }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Seat:</span>
+                            <span class="value">{{ employeeToDelete.seat_id || 'Unassigned' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="cancel-btn" (click)="cancelDelete()">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </button>
+                    <button class="delete-confirm-btn" (click)="confirmDelete()" [disabled]="isDeleting">
+                        <i class="bi bi-trash" *ngIf="!isDeleting"></i>
+                        <i class="bi bi-hourglass-split" *ngIf="isDeleting"></i>
+                        {{ isDeleting ? 'Deleting...' : 'Delete Employee' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div class="toast-container">
+            <div *ngIf="showSuccessToast" class="toast toast-success">
+                <i class="bi bi-check-circle"></i>
+                <span>{{ successMessage }}</span>
+                <button class="toast-close" (click)="hideSuccessToast()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            
+            <div *ngIf="showWarningToast" class="toast toast-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                <span>{{ warningMessage }}</span>
+                <button class="toast-close" (click)="hideWarningToast()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+            
+            <div *ngIf="showErrorToast" class="toast toast-error">
+                <i class="bi bi-x-circle"></i>
+                <span>{{ errorMessage }}</span>
+                <button class="toast-close" (click)="hideErrorToast()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
 
        
     </div>

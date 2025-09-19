@@ -43,8 +43,19 @@ addEmployee(employee: any): Observable<any> {
   return this.http.post<any>(`${this.apiUrl}/create`, employee).pipe(
       catchError((error: HttpErrorResponse) => {
           console.error("❌ API Error:", error);
-          alert("❌ Error: " + (error.error?.message || "Server Error"));
-          return throwError(() => new Error(error.error?.message || "Server Error"));
+          console.error("❌ Error Status:", error.status);
+          console.error("❌ Error Body:", error.error);
+          console.error("❌ Error Message:", error.message);
+          
+          // Preserve the full error object for better debugging
+          const errorWithDetails = {
+            ...error,
+            originalError: error.error,
+            status: error.status,
+            message: error.error?.message || error.message || "Server Error"
+          };
+          
+          return throwError(() => errorWithDetails);
       })
   );
 }

@@ -44,6 +44,19 @@ export class EmployeeComponent implements OnInit {
   showModal = false;
   showEditModal = false;
   showConfirmation = false;
+  showBulkUploadModal = false;
+  showDeleteModal = false;
+  showSuccessToast = false;
+  showErrorToast = false;
+  showWarningToast = false;
+  successMessage = '';
+  errorMessage = '';
+  warningMessage = '';
+  selectedFile: File | null = null;
+  isDragOver = false;
+  isUploading = false;
+  isDeleting = false;
+  employeeToDelete: Employee | null = null;
 
   currentPage = 1;
   itemsPerPage = 8;
@@ -135,7 +148,7 @@ fetchVacantSeats() {
 
   generateReportExcel(): void {
     if (!this.employees || this.employees.length === 0) {
-        alert("No employee data available for generating the report.");
+        this.showError("No employee data available for generating the report.");
         return;
     }
 
@@ -169,7 +182,7 @@ fetchVacantSeats() {
 
   generateReport(): void {
     if (!this.employees || this.employees.length === 0) {
-        alert("No employee data available for generating the report.");
+        this.showError("No employee data available for generating the report.");
         return;
     }
 
@@ -256,13 +269,13 @@ addEmployee() {
       (response: any) => {
           console.log("✅ Response from backend:", response);
           if (response.message.includes('❌')) {
-              alert(response.message); // Show error if seat is occupied
+              this.showError(response.message); // Show error if seat is occupied
               return;
           }
           
           this.fetchEmployees();
           this.showModal = false;
-          alert(response.message || "✅ Employee added successfully!");
+          this.showSuccess(response.message || "Employee added successfully!");
 
           // Reset form
           this.newEmployee = { employeeid: 0, name: '', department: '', role: '', seat_id: 'Unassigned' };
@@ -270,7 +283,7 @@ addEmployee() {
       },
       (error) => {
           console.error('❌ Failed to add employee:', error);
-          alert('❌ Error: ' + (error.error?.message || 'Something went wrong!'));
+          this.showError('Error: ' + (error.error?.message || 'Something went wrong!'));
       }
   );
 }
@@ -320,13 +333,13 @@ addEmployee() {
         .subscribe({
             next: (res: any) => {
                 console.log("✅ Employee updated successfully:", res);
-                alert(res.message || "Update successful!");
+                this.showSuccess(res.message || "Update successful!");
                 this.fetchEmployees();
                 this.showEditModal = false;
             },
             error: (err) => {
                 console.error("❌ API Error:", err);
-                alert(err.error?.message || "Failed to update employee. Please try again.");
+                this.showError(err.error?.message || "Failed to update employee. Please try again.");
             }
         });
 }
@@ -335,23 +348,43 @@ addEmployee() {
   removeEmployee(id: number) {
     const employeeToDelete = this.employees.find(emp => emp.employeeid === id);
     if (!employeeToDelete) {
-      alert("Employee not found!");
+      this.showError("Employee not found!");
       return;
     }
 
-    const confirmation = confirm(`Are you sure you want to delete '${employeeToDelete.name}' (ID: ${id})?`);
-    if (!confirmation) {
+    // Store the employee to delete and show the custom modal
+    this.employeeToDelete = employeeToDelete;
+    this.showDeleteModal = true;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.employeeToDelete = null;
+    this.isDeleting = false;
+  }
+
+  confirmDelete(): void {
+    if (!this.employeeToDelete) {
+      this.showError("No employee selected for deletion!");
       return;
     }
 
-    this.employeeService.deleteEmployee(id).subscribe(
+    this.isDeleting = true;
+    const employeeId = this.employeeToDelete.employeeid;
+    const employeeName = this.employeeToDelete.name;
+
+    this.employeeService.deleteEmployee(employeeId).subscribe(
       () => {
         this.fetchEmployees();
-        alert(`Employee '${employeeToDelete.name}' (ID: ${id}) deleted successfully.`);
+        this.showSuccess(`Employee '${employeeName}' (ID: ${employeeId}) deleted successfully.`);
+        this.showDeleteModal = false;
+        this.employeeToDelete = null;
+        this.isDeleting = false;
       },
       (error) => {
         console.error('Error removing employee', error);
-        alert('Failed to delete employee: ' + error.message);
+        this.showError('Failed to delete employee: ' + error.message);
+        this.isDeleting = false;
       }
     );
   }
@@ -404,6 +437,406 @@ getSeatStatusClass(seatId: string | number | null): string {
   } else {
     return 'allocated';
   }
+}
+
+// Bulk Upload Methods
+onDragOver(event: DragEvent): void {
+  event.preventDefault();
+  this.isDragOver = true;
+}
+
+onDragLeave(event: DragEvent): void {
+  event.preventDefault();
+  this.isDragOver = false;
+}
+
+onFileDrop(event: DragEvent): void {
+  event.preventDefault();
+  this.isDragOver = false;
+  
+  const files = event.dataTransfer?.files;
+  if (files && files.length > 0) {
+    this.handleFileSelection(files[0]);
+  }
+}
+
+onFileSelect(event: any): void {
+  const file = event.target.files[0];
+  if (file) {
+    this.handleFileSelection(file);
+  }
+}
+
+handleFileSelection(file: File): void {
+  // Validate file type
+  const allowedTypes = [
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-excel' // .xls
+  ];
+  
+  if (!allowedTypes.includes(file.type)) {
+    this.showError('Please select a valid Excel file (.xlsx or .xls)');
+    return;
+  }
+  
+  // Validate file size (10MB limit)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    this.showError('File size must be less than 10MB');
+    return;
+  }
+  
+  this.selectedFile = file;
+}
+
+removeSelectedFile(): void {
+  this.selectedFile = null;
+}
+
+formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+closeBulkUploadModal(): void {
+  this.showBulkUploadModal = false;
+  this.selectedFile = null;
+  this.isDragOver = false;
+}
+
+async processBulkUpload(): Promise<void> {
+  if (!this.selectedFile) {
+    this.showError('Please select a file to upload');
+    return;
+  }
+  
+  this.isUploading = true;
+  
+  try {
+    // Parse Excel file
+    const employees = await this.parseExcelFile(this.selectedFile);
+    
+    if (employees.length === 0) {
+      this.showError('No valid employee data found in the file');
+      this.isUploading = false;
+      return;
+    }
+    
+    // Upload employees to backend
+    const result = await this.uploadEmployeesToBackend(employees);
+    
+    // Determine the result type and show appropriate notifications
+    if (result.successCount === employees.length) {
+      // Full success - all employees uploaded successfully
+      this.showSuccess(`Successfully uploaded all ${result.successCount} employees!`);
+      this.fetchEmployees(); // Refresh the employee list
+    } else if (result.successCount > 0 && result.failedEmployees.length > 0) {
+      // Partial success - some succeeded, some failed
+      this.generateFailureReport(result.failedEmployees);
+      this.showWarning(`Upload completed: ${result.successCount} successful, ${result.failedEmployees.length} failed. Check the generated report for failed entries.`);
+      this.fetchEmployees(); // Refresh the employee list
+    } else {
+      // Full failure - no employees uploaded successfully
+      this.generateFailureReport(result.failedEmployees);
+      this.showError(`Upload failed: All ${result.failedEmployees.length} employees failed to upload. Check the generated report for details.`);
+    }
+    
+    this.closeBulkUploadModal();
+    
+  } catch (error) {
+    console.error('Bulk upload error:', error);
+    this.showError('An error occurred while processing the file');
+  } finally {
+    this.isUploading = false;
+  }
+}
+
+private async parseExcelFile(file: File): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e: any) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // Skip header row and process data
+        const employees = [];
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i] as any[];
+          if (row && row.length >= 4) {
+            const employee = {
+              employeeid: row[0] || 0,
+              name: row[1] || '',
+              department: row[2] || '',
+              role: row[3] || '',
+              seat_id: row[4] || 'Unassigned'
+            };
+            employees.push(employee);
+          }
+        }
+        
+        resolve(employees);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+private async uploadEmployeesToBackend(employees: any[]): Promise<{successCount: number, failedEmployees: any[]}> {
+  const failedEmployees: any[] = [];
+  let successCount = 0;
+  
+  for (const employee of employees) {
+    try {
+      await this.employeeService.addEmployee(employee).toPromise();
+      successCount++;
+    } catch (error: any) {
+      console.error('Failed to upload employee:', employee, error);
+      
+      // Extract detailed error reason with comprehensive logging
+      console.log('Full error object:', error);
+      console.log('Error status:', error.status);
+      console.log('Error error:', error.error);
+      console.log('Error message:', error.message);
+      
+      let errorReason = 'Unknown error';
+      
+      // Try multiple ways to extract error message
+      if (error.error?.message) {
+        errorReason = error.error.message;
+      } else if (error.error?.error) {
+        errorReason = error.error.error;
+      } else if (error.error?.details) {
+        errorReason = error.error.details;
+      } else if (error.message) {
+        errorReason = error.message;
+      } else if (error.status === 400) {
+        errorReason = 'Bad request - Invalid data format';
+      } else if (error.status === 409) {
+        errorReason = 'Conflict - Employee ID or seat already exists';
+      } else if (error.status === 404) {
+        errorReason = 'Seat not found - Invalid seat number';
+      } else if (error.status === 500) {
+        errorReason = 'Server error - Please try again later';
+      } else if (error.status === 422) {
+        errorReason = 'Validation error - Invalid employee data';
+      } else if (error.status === 0) {
+        errorReason = 'Network error - Unable to connect to server';
+      }
+      
+      // Add specific validation for common issues
+      if (errorReason.toLowerCase().includes('seat') && errorReason.toLowerCase().includes('occupied')) {
+        errorReason = `Seat ${employee.seat_id} is already occupied`;
+      } else if (errorReason.toLowerCase().includes('employee') && errorReason.toLowerCase().includes('exists')) {
+        errorReason = `Employee ID ${employee.employeeid} already exists`;
+      } else if (errorReason.toLowerCase().includes('seat') && errorReason.toLowerCase().includes('not found')) {
+        errorReason = `Seat ${employee.seat_id} does not exist`;
+      } else if (errorReason.toLowerCase().includes('invalid')) {
+        errorReason = `Invalid data format for employee ${employee.name}`;
+      } else if (errorReason.toLowerCase().includes('duplicate')) {
+        errorReason = `Duplicate entry for employee ${employee.name} (ID: ${employee.employeeid})`;
+      } else if (errorReason.toLowerCase().includes('constraint')) {
+        errorReason = `Database constraint violation for employee ${employee.name}`;
+      } else if (errorReason.toLowerCase().includes('validation')) {
+        errorReason = `Validation failed for employee ${employee.name}`;
+      }
+      
+      // If still unknown, provide more context
+      if (errorReason === 'Unknown error') {
+        errorReason = `Unknown error for employee ${employee.name} (ID: ${employee.employeeid}, Seat: ${employee.seat_id})`;
+        if (error.status) {
+          errorReason += ` - Status: ${error.status}`;
+        }
+        if (error.error && typeof error.error === 'object') {
+          errorReason += ` - Details: ${JSON.stringify(error.error)}`;
+        }
+      }
+      
+      failedEmployees.push({
+        ...employee,
+        error: errorReason,
+        statusCode: error.status || 'Unknown'
+      });
+    }
+  }
+  
+  return { successCount, failedEmployees };
+}
+
+private generateFailureReport(failedEmployees: any[]): void {
+  const currentDate = new Date().toISOString().slice(0, 10);
+  const fileName = `Failed_Uploads_${currentDate}.xlsx`;
+  
+  // Prepare data for Excel with detailed error information
+  const headers = [["Employee ID", "Name", "Department", "Role", "Seat No", "Error Reason", "Status Code", "Timestamp"]];
+  const data = failedEmployees.map(emp => [
+    emp.employeeid, 
+    emp.name, 
+    emp.department, 
+    emp.role, 
+    emp.seat_id, 
+    emp.error,
+    emp.statusCode,
+    new Date().toLocaleString()
+  ]);
+  
+  // Create worksheet
+  const ws = XLSX.utils.aoa_to_sheet([...headers, ...data]);
+  
+  // Set column widths for better readability
+  ws["!cols"] = [
+    { wch: 12 }, // Employee ID
+    { wch: 20 }, // Name
+    { wch: 15 }, // Department
+    { wch: 15 }, // Role
+    { wch: 12 }, // Seat No
+    { wch: 40 }, // Error Reason (wider for detailed messages)
+    { wch: 12 }, // Status Code
+    { wch: 20 }  // Timestamp
+  ];
+  
+  // Style the header row
+  const headerRange = XLSX.utils.decode_range(ws['!ref']!);
+  for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!ws[cellAddress]) continue;
+    ws[cellAddress].s = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "FFE6E6" } }, // Light red background for error headers
+      alignment: { horizontal: "center" }
+    };
+  }
+  
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Failed Uploads");
+  
+  // Generate and download file
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const excelFile = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(excelFile, fileName);
+}
+
+// Toast notification methods
+showSuccess(message: string): void {
+  this.successMessage = message;
+  this.showSuccessToast = true;
+  setTimeout(() => this.hideSuccessToast(), 5000);
+}
+
+showError(message: string): void {
+  this.errorMessage = message;
+  this.showErrorToast = true;
+  setTimeout(() => this.hideErrorToast(), 5000);
+}
+
+showWarning(message: string): void {
+  this.warningMessage = message;
+  this.showWarningToast = true;
+  setTimeout(() => this.hideWarningToast(), 5000);
+}
+
+hideSuccessToast(): void {
+  this.showSuccessToast = false;
+}
+
+hideErrorToast(): void {
+  this.showErrorToast = false;
+}
+
+hideWarningToast(): void {
+  this.showWarningToast = false;
+}
+
+downloadTemplate(): void {
+  // Create sample data for template
+  const templateData = [
+    ["Employee ID", "Name", "Department", "Role", "Seat No"],
+    [1, "John Doe", "IT", "Developer", "A1"],
+    [2, "Jane Smith", "HR", "Manager", "B2"],
+    [3, "Bob Johnson", "Finance", "Analyst", "Work From Home"],
+    [4, "Alice Brown", "Marketing", "Coordinator", "Unassigned"]
+  ];
+  
+  // Create worksheet
+  const ws = XLSX.utils.aoa_to_sheet(templateData);
+  
+  // Set column widths
+  ws["!cols"] = [
+    { wch: 12 }, // Employee ID
+    { wch: 20 }, // Name
+    { wch: 15 }, // Department
+    { wch: 15 }, // Role
+    { wch: 15 }  // Seat No
+  ];
+  
+  // Style the header row
+  const headerRange = XLSX.utils.decode_range(ws['!ref']!);
+  for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+    const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+    if (!ws[cellAddress]) continue;
+    ws[cellAddress].s = {
+      font: { bold: true },
+      fill: { fgColor: { rgb: "E3F2FD" } },
+      alignment: { horizontal: "center" }
+    };
+  }
+  
+  // Create workbook
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Employee Template");
+  
+  // Generate and download file
+  const fileName = "Employee_Upload_Template.xlsx";
+  const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const excelFile = new Blob([excelBuffer], { type: "application/octet-stream" });
+  saveAs(excelFile, fileName);
+  
+  this.showSuccess("Template downloaded successfully!");
+}
+
+// Debug method to test error handling
+debugErrorHandling(): void {
+  console.log("=== DEBUG: Testing Error Handling ===");
+  
+  // Test with a sample employee that might cause an error
+  const testEmployee = {
+    employeeid: 999999,
+    name: "Test Employee",
+    department: "Test Dept",
+    role: "Test Role",
+    seat_id: "INVALID_SEAT"
+  };
+  
+  console.log("Testing with employee:", testEmployee);
+  
+  this.employeeService.addEmployee(testEmployee).subscribe({
+    next: (response) => {
+      console.log("Unexpected success:", response);
+    },
+    error: (error) => {
+      console.log("=== ERROR DEBUG INFO ===");
+      console.log("Full error object:", error);
+      console.log("Error type:", typeof error);
+      console.log("Error keys:", Object.keys(error));
+      console.log("Error status:", error.status);
+      console.log("Error message:", error.message);
+      console.log("Error error:", error.error);
+      console.log("Error originalError:", error.originalError);
+      console.log("=== END ERROR DEBUG ===");
+    }
+  });
 }
 
 }
