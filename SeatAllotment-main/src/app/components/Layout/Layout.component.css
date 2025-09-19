@@ -15,9 +15,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 380px; /* Matches modal width */
+  width: 320px; /* Matches modal width */
   background: white;
-  padding: 25px;
+  padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
   text-align: center;
@@ -26,7 +26,7 @@
 
 /* Title Styling (H2 Matches Modal Style) */
 .employee-popup h2 {
-  font-size: 22px;
+  font-size: 18px;
   margin-top: 0;
   color: #333;
   font-weight: bold;
@@ -34,25 +34,25 @@
 
 /* Popup Content Spacing */
 .popup-content p {
-  font-size: 16px;
+  font-size: 14px;
   color: #555;
-  margin: 10px 0;
+  margin: 8px 0;
   text-align: left;
 }
 
 /* Button Container */
 .popup-buttons {
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 /* Close Button (Matches "Close" in Modal) */
 .close-btn {
   background-color: #1abc9c;
   color: white;
-  padding: 10px 15px;
+  padding: 8px 12px;
   border: none;
   border-radius: 5px;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   width: 100%;
 }
@@ -79,22 +79,22 @@ svg {
 
 /* Enhanced Employee Modal */
 .enhanced-employee-modal {
-  max-width: 450px;
+  max-width: 380px;
   width: 90%;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 25px;
-  padding-bottom: 20px;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
   border-bottom: 2px solid #e9ecef;
 }
 
 .employee-icon {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
   border-radius: 50%;
   display: flex;
@@ -103,35 +103,35 @@ svg {
 }
 
 .employee-icon i {
-  font-size: 24px;
+  font-size: 20px;
   color: white;
 }
 
 .modal-header h2 {
   margin: 0;
   color: #2c3e50;
-  font-size: 22px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .employee-info-card {
   background: #f8f9fa;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 15px;
   border: 1px solid #e9ecef;
 }
 
 .info-section {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 12px;
 }
 
 .info-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 8px 0;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -142,23 +142,23 @@ svg {
 .info-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-weight: 600;
   color: #495057;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .info-label i {
   color: #6c5ce7;
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .info-value {
   color: #2c3e50;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
   text-align: right;
-  max-width: 200px;
+  max-width: 180px;
   word-break: break-word;
 }
 
@@ -184,15 +184,15 @@ svg {
   background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   justify-content: center;
 }
@@ -215,13 +215,13 @@ svg {
 
 /* Vacant Seat Modal */
 .vacant-seat-modal {
-  max-width: 400px;
+  max-width: 350px;
   width: 90%;
 }
 
 .vacant-icon {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, #28a745, #20c997);
   border-radius: 50%;
   display: flex;
@@ -230,31 +230,31 @@ svg {
 }
 
 .vacant-icon i {
-  font-size: 24px;
+  font-size: 20px;
   color: white;
 }
 
 .vacant-info-card {
   background: #f8f9fa;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 10px;
+  padding: 15px;
   border: 1px solid #e9ecef;
 }
 
 .vacant-status {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin-bottom: 20px;
-  padding: 15px;
+  gap: 12px;
+  margin-bottom: 15px;
+  padding: 12px;
   background: #d4edda;
-  border-radius: 10px;
+  border-radius: 8px;
   border-left: 4px solid #28a745;
 }
 
 .status-icon.available {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   background: #28a745;
   border-radius: 50%;
   display: flex;
@@ -263,35 +263,35 @@ svg {
 }
 
 .status-icon.available i {
-  font-size: 20px;
+  font-size: 18px;
   color: white;
 }
 
 .status-text h3 {
-  margin: 0 0 5px 0;
+  margin: 0 0 4px 0;
   color: #155724;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
 }
 
 .status-text p {
   margin: 0;
   color: #155724;
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.8;
 }
 
 .seat-details {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .detail-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -302,13 +302,13 @@ svg {
 .detail-label {
   font-weight: 600;
   color: #495057;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .detail-value {
   color: #2c3e50;
   font-weight: 500;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .status-available {
