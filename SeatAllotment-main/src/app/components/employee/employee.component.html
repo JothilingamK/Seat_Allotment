@@ -3,38 +3,57 @@
     <div class="sidebar">
         <img src="assets/finzly.svg" alt="logo" height="50px"><br>
         <button [routerLink]="'/'" [class.active]="selectedMenu === 'home'" class="sidebar-btn">
+            <i class="bi bi-house-door"></i>
             Home
         </button>
         <button (click)="setMenu('manageEmployee')" [class.active]="selectedMenu === 'manageEmployee'" class="sidebar-btn">
+            <i class="bi bi-people"></i>
             Manage Employee
         </button>
     </div>
 
     <!-- Main Content -->
     <div class="content">
-        <p style="text-align: right; font-size: 22px;">
-            <strong>Welcome Bas!</strong>
-            </p>
 
-            <!-- ✅ Employee Stats Section -->
-            <div class="stats-container">
+        <!-- Employee Stats Section -->
+        <div class="stats-container">
             <div class="stat-card total">
-                <h4>Total Employees</h4>
-                <p>{{ employees.length }}</p>
+                <div class="stat-icon">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>TOTAL EMPLOYEES</h4>
+                    <p>{{ employees.length }}</p>
+                </div>
             </div>
             <div class="stat-card unassigned">
-                <h4>Unassigned</h4>
-                <p>{{ getUnassignedCount() }}</p>
+                <div class="stat-icon">
+                    <i class="bi bi-person-x-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>UNASSIGNED</h4>
+                    <p>{{ getUnassignedCount() }}</p>
+                </div>
             </div>
             <div class="stat-card wfh">
-                <h4>Work From Home</h4>
-                <p>{{ getWFHCount() }}</p>
+                <div class="stat-icon">
+                    <i class="bi bi-house-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>WORK FROM HOME</h4>
+                    <p>{{ getWFHCount() }}</p>
+                </div>
             </div>
             <div class="stat-card allocated">
-                <h4>Allocated</h4>
-                <p>{{ getAllocatedCount() }}</p>
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h4>ALLOCATED</h4>
+                    <p>{{ getAllocatedCount() }}</p>
+                </div>
             </div>
-            </div>
+        </div>
 
 
 
@@ -44,59 +63,80 @@
             <p>Configure the seating layout and assign desks to employees.</p>
         </div>
 
-            <!-- Manage Employees Section -->
-            <div *ngIf="selectedMenu === 'manageEmployee'" class="employee-container">
-                <!-- Search Bar & Action Buttons -->
-                <div class="search-bar">
-                    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search" class="small-search">
-                    <button class="add-btn" (click)="showModal = true">+ Add Employee</button>
-                    <button class="report-btn" (click)="generateReport()">Generate PDF</button>
-                    <button class="report-btn" (click)="generateReportExcel()">Generate Excel</button>
+        <!-- Manage Employees Section -->
+        <div *ngIf="selectedMenu === 'manageEmployee'" class="employee-container">
+            <!-- Search Bar & Action Buttons -->
+            <div class="action-bar">
+                <div class="search-container">
+                    <i class="bi bi-search search-icon"></i>
+                    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" 
+                           placeholder="Search employees..." class="search-input">
                 </div>
-                <hr>
+                <div class="action-buttons">
+                    <button class="action-btn primary" (click)="showModal = true">
+                        <i class="bi bi-person-plus"></i> Add Employee
+                    </button>
+                    <button class="action-btn secondary" (click)="generateReport()">
+                        <i class="bi bi-file-earmark-pdf"></i> Generate PDF
+                    </button>
+                    <button class="action-btn secondary" (click)="generateReportExcel()">
+                        <i class="bi bi-file-earmark-excel"></i> Generate Excel
+                    </button>
+                </div>
+            </div>
 
 
             <!-- Employee Table -->
-            <table class="employee-table">
-                <thead>
-                    <tr>
-                        <th>Employee ID</th>
-                        <th>Name</th>
-                        <th>Department</th>
-                        <th>Role</th>
-                        <th>Seat No</th>
-                        <th>Edit</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let employee of paginatedEmployees">
-                    <!-- <tr *ngFor="let employee of paginatedEmployees | filter:searchQuery"> -->
-                        <td style="text-align: center;">{{ employee.employeeid }}</td>
-                        <td>{{ employee.name }}</td>
-                        <td>{{ employee.department }}</td>
-                        <td>{{ employee.role }}</td>
-                        <td style="text-align: center;">{{ employee.seat_id }}</td>
-                        <td style="text-align: center;">
-                            <button (click)="editEmployee(employee)" class="edit-btn">
-                                <i class="bi bi-pencil-square"></i>
-                            </button>
-                        </td>
-                        <td style="text-align: center;">
-                            <button (click)="removeEmployee(employee.employeeid)" class="delete-btn">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <hr>
+            <div class="table-container">
+                <table class="employee-table">
+                    <thead>
+                        <tr>
+                            <th>EMPLOYEE ID</th>
+                            <th>NAME</th>
+                            <th>DEPARTMENT</th>
+                            <th>ROLE</th>
+                            <th>SEAT NO</th>
+                            <th>EDIT</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let employee of paginatedEmployees" class="table-row">
+                            <td class="employee-id">{{ employee.employeeid }}</td>
+                            <td class="employee-name">{{ employee.name }}</td>
+                            <td class="employee-dept">{{ employee.department }}</td>
+                            <td class="employee-role">{{ employee.role || '-' }}</td>
+                            <td class="employee-seat">
+                                <span class="seat-badge" [ngClass]="getSeatStatusClass(employee.seat_id)">
+                                    {{ employee.seat_id || 'Unassigned' }}
+                                </span>
+                            </td>
+                            <td class="action-cell">
+                                <button (click)="editEmployee(employee)" class="action-btn edit" title="Edit Employee">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </td>
+                            <td class="action-cell">
+                                <button (click)="removeEmployee(employee.employeeid)" class="action-btn delete" title="Delete Employee">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <!-- Pagination Controls -->
             <div class="pagination-controls">
-                <button (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
-                <span>Page {{ currentPage }} of {{ totalPages() }}</span>
-                <button (click)="nextPage()" [disabled]="currentPage >= totalPages()">Next</button>
+                <button class="pagination-btn" (click)="prevPage()" [disabled]="currentPage === 1">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </button>
+                <div class="pagination-info">
+                    <span>Page {{ currentPage }} of {{ totalPages() }}</span>
+                </div>
+                <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage >= totalPages()">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
         </div>
 

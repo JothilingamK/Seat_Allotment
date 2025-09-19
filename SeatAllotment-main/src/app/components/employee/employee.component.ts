@@ -393,5 +393,17 @@ onSearchChange() {
   this.currentPage = 1;
 }
 
+getSeatStatusClass(seatId: string | number | null): string {
+  if (!seatId) return 'unassigned';
+  
+  const seat = String(seatId).toLowerCase();
+  if (seat === 'work from home') {
+    return 'work-from-home';
+  } else if (seat === 'unassigned') {
+    return 'unassigned';
+  } else {
+    return 'allocated';
+  }
+}
 
 }
