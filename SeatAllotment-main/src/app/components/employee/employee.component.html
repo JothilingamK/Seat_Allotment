@@ -1,0 +1,232 @@
+<div class="dashboard-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <img src="assets/finzly.svg" alt="logo" height="50px"><br>
+        <button [routerLink]="'/'" [class.active]="selectedMenu === 'home'" class="sidebar-btn">
+            Home
+        </button>
+        <button (click)="setMenu('manageEmployee')" [class.active]="selectedMenu === 'manageEmployee'" class="sidebar-btn">
+            Manage Employee
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <p style="text-align: right; font-size: 22px;">
+            <strong>Welcome Bas!</strong>
+            </p>
+
+            <!-- ✅ Employee Stats Section -->
+            <div class="stats-container">
+            <div class="stat-card total">
+                <h4>Total Employees</h4>
+                <p>{{ employees.length }}</p>
+            </div>
+            <div class="stat-card unassigned">
+                <h4>Unassigned</h4>
+                <p>{{ getUnassignedCount() }}</p>
+            </div>
+            <div class="stat-card wfh">
+                <h4>Work From Home</h4>
+                <p>{{ getWFHCount() }}</p>
+            </div>
+            <div class="stat-card allocated">
+                <h4>Allocated</h4>
+                <p>{{ getAllocatedCount() }}</p>
+            </div>
+            </div>
+
+
+
+        <!-- Configuration Section -->
+        <div *ngIf="selectedMenu === 'configuration'">
+            <h3>Seating Configuration</h3>
+            <p>Configure the seating layout and assign desks to employees.</p>
+        </div>
+
+            <!-- Manage Employees Section -->
+            <div *ngIf="selectedMenu === 'manageEmployee'" class="employee-container">
+                <!-- Search Bar & Action Buttons -->
+                <div class="search-bar">
+                    <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" placeholder="Search" class="small-search">
+                    <button class="add-btn" (click)="showModal = true">+ Add Employee</button>
+                    <button class="report-btn" (click)="generateReport()">Generate PDF</button>
+                    <button class="report-btn" (click)="generateReportExcel()">Generate Excel</button>
+                </div>
+                <hr>
+
+
+            <!-- Employee Table -->
+            <table class="employee-table">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Role</th>
+                        <th>Seat No</th>
+                        <th>Edit</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let employee of paginatedEmployees">
+                    <!-- <tr *ngFor="let employee of paginatedEmployees | filter:searchQuery"> -->
+                        <td style="text-align: center;">{{ employee.employeeid }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.role }}</td>
+                        <td style="text-align: center;">{{ employee.seat_id }}</td>
+                        <td style="text-align: center;">
+                            <button (click)="editEmployee(employee)" class="edit-btn">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                        </td>
+                        <td style="text-align: center;">
+                            <button (click)="removeEmployee(employee.employeeid)" class="delete-btn">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <hr>
+
+            <!-- Pagination Controls -->
+            <div class="pagination-controls">
+                <button (click)="prevPage()" [disabled]="currentPage === 1">Previous</button>
+                <span>Page {{ currentPage }} of {{ totalPages() }}</span>
+                <button (click)="nextPage()" [disabled]="currentPage >= totalPages()">Next</button>
+            </div>
+        </div>
+
+        
+
+         <div class="modal" *ngIf="showModal">
+            <div class="modal-content">
+                <h2>Add New Employee</h2>
+
+                <div class="form-group">
+                    <label>Employee ID:</label>
+                    <input [(ngModel)]="newEmployee.employeeid"   class="form-control"required />
+                </div>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input [(ngModel)]="newEmployee.name" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Department</label>
+                    <input [(ngModel)]="newEmployee.department" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Role</label>
+                    <input [(ngModel)]="newEmployee.role" class="form-control">
+                </div>
+
+                <!-- <div class="form-group">
+                    <label>Seat No</label>
+                    <input [(ngModel)]="newEmployee.seat_id" class="form-control">
+                </div> -->
+
+                <div class="form-group seat-selection">
+                    <label>Seat No</label>
+                    <select [(ngModel)]="newEmployee.seat_id" (change)="handleNewSeatSelection()" class="form-control">
+                        <option value="Work From Home">Work From Home</option>
+                        <option value="Unassigned">Unassigned</option>
+                        <option value="Manual">Manual Entry</option>
+                    </select>
+                    <!-- Seat selection dropdown -->
+                    <select *ngIf="newEmployee.seat_id === 'Manual' && vacantSeats.length > 0"
+                        [(ngModel)]="manualNewSeatEntry"
+                        class="form-control">
+                    <option *ngFor="let seat of vacantSeats" [value]="seat">{{ seat }}</option>
+                    </select>
+
+                    <!-- Manual seat input (if no vacant seats are available) -->
+                    <input *ngIf="newEmployee.seat_id === 'Manual' && vacantSeats.length === 0"
+                    [(ngModel)]="manualNewSeatEntry"
+                    class="form-control"
+                    placeholder="Enter Seat No">
+
+                    <!-- Message when no vacant seats are available -->
+                    <p *ngIf="newEmployee.seat_id === 'Manual' && vacantSeats.length === 0">
+                    No vacant seats available. Enter seat manually.
+                    </p>
+
+                </div>
+                
+
+                <div class="modal-buttons">
+                    <button class="submit-btn" (click)="addEmployee()">Submit</button>
+                    <button class="close-btn" (click)="showModal = false">Close</button>
+                </div>
+            </div>
+        </div>
+
+<!-- Modal for Editing Employee -->
+        <div class="modal" *ngIf="showEditModal">
+            <div class="modal-content">
+                <h2>Edit Employee</h2>
+
+                <div class="form-group">
+                    <label>Name</label>
+                    <input [(ngModel)]="selectedEmployee.name" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Department</label>
+                    <input [(ngModel)]="selectedEmployee.department" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Role</label>
+                    <input [(ngModel)]="selectedEmployee.role" class="form-control">
+                </div>
+
+                <!-- Seat Selection -->
+                <div class="form-group seat-selection">
+                    <label>Seat No</label>
+                    <select [(ngModel)]="selectedEmployee.seat_id" (change)="handleSeatSelection()" class="form-control">
+                        <option value="Work From Home">Work From Home</option>
+                        <option value="Unassigned">Unassigned</option>
+                        <option value="Manual">Manual Entry</option>
+                    </select>
+
+                    <!-- Dropdown for vacant seats -->
+                    <select *ngIf="selectedEmployee.seat_id === 'Manual' && vacantSeats.length > 0"
+                            [(ngModel)]="manualSeatEntry"
+                            class="form-control">
+                        <option *ngFor="let seat of vacantSeats" [value]="seat">{{ seat }}</option>
+                    </select>
+
+                    <!-- Input field for manual seat entry -->
+                    <input *ngIf="selectedEmployee.seat_id === 'Manual' && vacantSeats.length === 0"
+                        [(ngModel)]="manualSeatEntry"
+                        class="form-control"
+                        placeholder="Enter Seat No">
+
+                    <!-- Message when no vacant seats are available -->
+                    <p *ngIf="selectedEmployee.seat_id === 'Manual' && vacantSeats.length === 0">
+                        No vacant seats available. Enter seat manually.
+                    </p>
+                </div>
+
+                <div class="modal-buttons">
+                    <button class="submit-btn" (click)="updateSeat()">Update</button>
+                    <button class="close-btn" (click)="showEditModal = false">Close</button>
+                </div>
+
+            </div> <!-- This properly closes modal-content -->
+        </div> <!-- This properly closes modal -->
+
+        <!-- Confirmation Popup -->
+        <div *ngIf="showConfirmation" class="confirmation-popup">
+            Employee Added Successfully!
+        </div>
+
+
+       
+    </div>
+</div>
