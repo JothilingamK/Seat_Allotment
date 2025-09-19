@@ -335,9 +335,18 @@
     transition: all 0.3s ease;
 }
 
+.employee-table tbody tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+.employee-table tbody tr:nth-child(odd) {
+    background-color: white;
+}
+
 .employee-table tbody tr:hover {
-    background: #f8f9fa;
-    transform: scale(1.01);
+    background-color: #e3f2fd;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .employee-table td {

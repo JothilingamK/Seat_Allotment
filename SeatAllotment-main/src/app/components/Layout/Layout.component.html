@@ -1,21 +1,106 @@
 <app-navbar></app-navbar>
 
 <!-- Overlay for better visibility -->
-<div *ngIf="showPopup" class="popup-overlay" (click)="closePopup()"></div>
+<div *ngIf="showPopup || showVacantSeatModal" class="popup-overlay" (click)="closeAllModals()"></div>
 
 <!-- Employee Info Popup -->
-<div *ngIf="showPopup && selectedEmployee" class="employee-popup">
-  <h2>Employee Details</h2>
+<div *ngIf="showPopup && selectedEmployee" class="employee-popup enhanced-employee-modal">
+  <div class="modal-header">
+    <div class="employee-icon">
+      <i class="bi bi-person-circle"></i>
+    </div>
+    <h2>Employee Details</h2>
+  </div>
   
   <div class="popup-content">
-    <p><strong>Seat :</strong> {{ selectedEmployee.seat_id }}</p>
-    <p><strong>Name:</strong> {{ selectedEmployee.name }}</p>
-    <p><strong>Role:</strong> {{ selectedEmployee.role }}</p>
-    <p><strong>Department:</strong> {{ selectedEmployee.department }}</p>
+    <div class="employee-info-card">
+      <div class="info-section">
+        <div class="info-item">
+          <div class="info-label">
+            <i class="bi bi-geo-alt"></i>
+            <span>Seat Number</span>
+          </div>
+          <div class="info-value seat-number">{{ selectedEmployee.seat_id }}</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <i class="bi bi-person"></i>
+            <span>Employee Name</span>
+          </div>
+          <div class="info-value">{{ selectedEmployee.name }}</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <i class="bi bi-briefcase"></i>
+            <span>Role</span>
+          </div>
+          <div class="info-value">{{ selectedEmployee.role || 'Not specified' }}</div>
+        </div>
+        
+        <div class="info-item">
+          <div class="info-label">
+            <i class="bi bi-building"></i>
+            <span>Department</span>
+          </div>
+          <div class="info-value department-badge">{{ selectedEmployee.department }}</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="popup-buttons">
-    <button class="close-btn" (click)="closePopup()">Close</button>
+    <button class="close-btn enhanced-close-btn" (click)="closeAllModals()">
+      <i class="bi bi-x-circle"></i>
+      Close
+    </button>
+  </div>
+</div>
+
+<!-- Vacant Seat Info Modal -->
+<div *ngIf="showVacantSeatModal" class="employee-popup vacant-seat-modal">
+  <div class="modal-header">
+    <div class="vacant-icon">
+      <i class="bi bi-check-circle"></i>
+    </div>
+    <h2>Seat Information</h2>
+  </div>
+  
+  <div class="popup-content">
+    <div class="vacant-info-card">
+      <div class="vacant-status">
+        <div class="status-icon available">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        <div class="status-text">
+          <h3>Seat Available</h3>
+          <p>This seat is currently vacant and available for assignment.</p>
+        </div>
+      </div>
+      
+      <div class="seat-details">
+        <div class="detail-item">
+          <span class="detail-label">Seat Number:</span>
+          <span class="detail-value">{{ vacantSeatInfo?.seatId }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Status:</span>
+          <span class="detail-value status-available">Available</span>
+        </div>
+        <div class="detail-item" *ngIf="vacantSeatInfo?.message">
+          <span class="detail-label">Message:</span>
+          <span class="detail-value">{{ vacantSeatInfo?.message }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup-buttons">
+    <button class="close-btn enhanced-close-btn" (click)="closeAllModals()">
+      <i class="bi bi-x-circle"></i>
+      Close
+    </button>
   </div>
 </div>
 

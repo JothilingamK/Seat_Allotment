@@ -19,6 +19,8 @@ export class LayoutComponent implements OnInit {
   SeatStatus = SeatStatus;
   selectedEmployee: Employee | null = null;
   showPopup = false;
+  showVacantSeatModal = false;
+  vacantSeatInfo: any = null;
   seats: Record<string, Seat> = {};  // ✅ Store seats as an object for quick access
   employees: Record<string, Employee> = {}; 
 
@@ -87,20 +89,27 @@ export class LayoutComponent implements OnInit {
         }
   
         if (response.status === 'VACANT') {
-          console.log('Vacant:', response.message);
-          this.selectedEmployee = null;
-          this.showPopup = false;
+          this.closeAllModals(); // Close any existing modals first
+          this.vacantSeatInfo = {
+            seatId: seatId,
+            message: response.message || 'Seat is available for assignment'
+          };
+          this.showVacantSeatModal = true;
           return;
         }
   
         if (response.status === 'RESERVED') {
-          console.log('Reserved:', response.message);
-          this.selectedEmployee = null;
-          this.showPopup = false;
+          this.closeAllModals(); // Close any existing modals first
+          this.vacantSeatInfo = {
+            seatId: seatId,
+            message: response.message || 'Seat is reserved'
+          };
+          this.showVacantSeatModal = true;
           return;
         }
   
         if (response.employeeName) {
+          this.closeAllModals(); // Close any existing modals first
           this.selectedEmployee = {
             employeeid: response.employeeId || null,
             name: response.employeeName,
@@ -131,5 +140,19 @@ export class LayoutComponent implements OnInit {
 
   closePopup() {
     this.showPopup = false;
+    this.selectedEmployee = null;
+  }
+
+  closeVacantSeatModal() {
+    this.showVacantSeatModal = false;
+    this.vacantSeatInfo = null;
+  }
+
+  // Ensure only one modal is open at a time
+  closeAllModals() {
+    this.showPopup = false;
+    this.showVacantSeatModal = false;
+    this.selectedEmployee = null;
+    this.vacantSeatInfo = null;
   }
 }
